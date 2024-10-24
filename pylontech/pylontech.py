@@ -4,6 +4,7 @@ import serial
 import construct
 
 logger = logging.getLogger(__name__)
+construct.setGlobalPrintFullStrings(True)
 
 class HexToByte(construct.Adapter):
     def _decode(self, obj, context, path) -> bytes:
@@ -13,8 +14,7 @@ class HexToByte(construct.Adapter):
 
 class JoinBytes(construct.Adapter):
     def _decode(self, obj, context, path) -> bytes:
-        return ''.join([chr(x) for x in obj]).encode()
-
+        return ''.join([chr(x) for x in obj]).encode('latin1')
 
 class DivideBy1000(construct.Adapter):
     def _decode(self, obj, context, path) -> float:
@@ -47,7 +47,7 @@ class Pylontech:
     manufacturer_info_fmt = construct.Struct(
         "DeviceName" / JoinBytes(construct.Array(10, construct.Byte)),
         "SoftwareVersion" / construct.Array(2, construct.Byte),
-        "ManufacturerName" / JoinBytes(construct.GreedyRange(construct.Byte)),
+        "ManufacturerName" / JoinBytes(construct.Array(20, construct.Byte)),
     )
 
     system_parameters_fmt = construct.Struct(
@@ -94,7 +94,7 @@ class Pylontech:
 
     get_values_fmt = construct.Struct(
         "NumberOfModules" / construct.Byte,
-        "Module" / construct.Array(construct.this.NumberOfModules, construct.Struct(
+        "Module" / construct.Array(1, construct.Struct(
             "NumberOfCells" / construct.Int8ub,
             "CellVoltages" / construct.Array(construct.this.NumberOfCells, ToVolt(construct.Int16sb)),
             "NumberOfTemperatures" / construct.Int8ub,
@@ -140,7 +140,7 @@ class Pylontech:
         "StateOfCharge" / construct.Computed(construct.this.RemainingCapacity / construct.this.TotalCapacity),
     )
 
-    def __init__(self, serial_port='/dev/ttyUSB0', baudrate=115200):
+    def __init__(self, serial_port='\\\\.\\COM4', baudrate=9600):
         self.s = serial.Serial(serial_port, baudrate, bytesize=8, parity=serial.PARITY_NONE, stopbits=1, timeout=2, exclusive=True)
 
 
@@ -171,6 +171,7 @@ class Pylontech:
 
     def send_cmd(self, address: int, cmd, info: bytes = b''):
         raw_frame = self._encode_cmd(address, cmd, info)
+        print(f"Command: {raw_frame}")
         self.s.write(raw_frame)
 
 
@@ -227,7 +228,7 @@ class Pylontech:
 
             if raw_frame:
                 sn = self.get_module_serial_number(adr)
-                sn_str = sn["ModuleSerialNumber"].decode()
+                sn_str = sn["ModuleSerialNumber"].decode('latin1')
 
                 batteries[adr] = sn_str
                 logger.debug("Found battery at address " + str(adr) + " with serial " + sn_str)
@@ -249,7 +250,7 @@ class Pylontech:
 
 
     def get_system_parameters(self, dev_id=None):
-        if dev_id:
+        if dev_id is not None:
             bdevid = "{:02X}".format(dev_id).encode()
             self.send_cmd(dev_id, 0x47, bdevid)
         else:
@@ -266,11 +267,10 @@ class Pylontech:
         print(f.info)
         print(len(f.info))
         ff = self.management_info_fmt.parse(f.info[1:])
-        print(ff)
         return ff
 
     def get_module_serial_number(self, dev_id=None):
-        if dev_id:
+        if dev_id is not None:
             bdevid = "{:02X}".format(dev_id).encode()
             self.send_cmd(dev_id, 0x93, bdevid)
         else:
@@ -299,10 +299,25 @@ class Pylontech:
 
 if __name__ == '__main__':
     p = Pylontech()
-    # print(p.get_protocol_version())
-    # print(p.get_manufacturer_info())
-    # print(p.get_system_parameters())
-    # print(p.get_management_info())
-    # print(p.get_module_serial_number())
-    # print(p.get_values())
-    print(p.get_values_single(2))
+    #print("get_protocol_version")
+    #print(p.get_protocol_version())
+
+    #print("get_manufacturer_info")
+    #print(p.get_manufacturer_info())
+
+    #print("get_manufacturer_info")
+    #print(p.get_system_parameters())
+
+    #print("get_management_info")
+    #print(p.get_management_info(0))
+
+    #print("get_module_serial_number")
+    #print(p.get_module_serial_number())
+
+    print("get_values")
+    print(p.get_values())
+
+    #print("get_values_single")
+    #print(p.get_values_single(2))
+
+    #p.scan_for_batteries(0, 4)
