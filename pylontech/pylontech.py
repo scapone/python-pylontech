@@ -1,3 +1,4 @@
+from ctypes import Array
 from typing import Dict
 import logging
 import serial
@@ -140,6 +141,49 @@ class Pylontech:
         "StateOfCharge" / construct.Computed(construct.this.RemainingCapacity / construct.this.TotalCapacity),
     )
 
+    alarm_info = construct.Struct(
+        "NumberOfModule" / construct.Byte,
+        "NumberOfCells" / construct.Byte,
+        "CellVoltages" / construct.Array(construct.this.NumberOfCells, construct.Byte),
+        "NumberOfTemperatures" / construct.Byte,
+        "Temperatures" / construct.Array(construct.this.NumberOfTemperatures, construct.Byte),
+        "ChargeCurrent" / construct.Byte,
+        "PackVoltage" / construct.Byte,
+        "DischargeCurrent" / construct.Byte,
+        "Status1" / construct.BitStruct(
+            "PackUnderVoltage" / construct.Flag,
+            "ChargeTemperatureProtection" / construct.Flag,
+            "DischargeTemperatureProtection" / construct.Flag,
+            "DischargeOvercurrent" / construct.Flag,
+            "_Reserved" / construct.Flag,
+            "ChargeOvercurrent" / construct.Flag,
+            "CellLowerLimitVoltage" / construct.Flag,
+            "OverVoltage" / construct.Flag
+        ),
+        "Status2" / construct.BitStruct(
+            "_Reserved" / construct.Nibble,
+            "UseThePackPower" / construct.Flag,
+            "DFET" / construct.Flag,
+            "CFET" / construct.Flag,
+            "PreFET" / construct.Flag
+        ),
+        "Status3" / construct.BitStruct(
+            "EffectiveChargeCurrent" / construct.Flag,
+            "EffectiveDischargeCurrent" / construct.Flag,
+            "StartUpHeater" / construct.Flag,
+            "_Reserved1" / construct.Flag,
+            "FullyCharged" / construct.Flag,
+            "_Reserved2" / construct.Padding(2),
+            "Buzzer" / construct.Flag
+        ),
+        "Status4" / construct.BitStruct(
+            "CheckCell_8_1" / construct.Array(8, construct.Flag)
+        ),
+        "Status5" / construct.BitStruct(
+            "CheckCell_16_9" / construct.Array(8, construct.Flag)
+        )
+    )
+
     def __init__(self, serial_port='\\\\.\\COM4', baudrate=9600):
         self.s = serial.Serial(serial_port, baudrate, bytesize=8, parity=serial.PARITY_NONE, stopbits=1, timeout=2, exclusive=True)
 
@@ -213,6 +257,7 @@ class Pylontech:
 
     def read_frame(self):
         raw_frame = self.s.readline()
+        print(f'Response: {raw_frame}')
         f = self._decode_hw_frame(raw_frame=raw_frame)
         parsed = self._decode_frame(f)
         return parsed
@@ -296,6 +341,16 @@ class Pylontech:
         d = self.get_values_single_fmt.parse(f.info[1:])
         return d
 
+    def get_alarm_info(self, dev_id = None):
+        if dev_id is None:
+            dev_id = 2
+        
+        bdevid = "{:02X}".format(dev_id).encode()
+        #self.send_cmd(dev_id, 0x44, b"FF")
+        f = self.read_frame()
+        #dataflag = f.info[0]
+        d = self.alarm_info.parse(f.info[1:])
+        return d
 
 if __name__ == '__main__':
     p = Pylontech()
@@ -321,3 +376,6 @@ if __name__ == '__main__':
     #print(p.get_values_single(2))
 
     #p.scan_for_batteries(0, 4)
+
+    #print("get_alarm_info")
+    #print(p.get_alarm_info(2))
