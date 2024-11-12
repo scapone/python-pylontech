@@ -1,4 +1,3 @@
-from ctypes import Array
 from typing import Dict
 import logging
 import serial
@@ -184,6 +183,49 @@ class Pylontech:
         )
     )
 
+    system_analog_data = construct.Struct(
+        "TotalAverageVoltage" / ToVolt(construct.Int16ub),
+        "TotalCurrent" / DivideBy1000(construct.Int16sb),
+        "SystemSOC" / construct.Byte,
+        "AverageNumberOfCycles" / construct.Int16ub,
+        "MaximumNumberOfCycles" / construct.Int16ub,
+        "AverageSOH" / construct.Byte,
+        "MinimumSOH" / construct.Byte,
+        "SingleCoreMaximumVoltage" / ToVolt(construct.Int16ub),
+        "ModuleWithHighestVoltageOfSingleCore" / construct.Short,
+        "SingleCoreMinimumVoltage" / ToVolt(construct.Int16ub),
+        "ModuleWithLowestVoltageOfSingleCore" / construct.Short,
+        "SingleCoreAverageTemperature" / ToCelsius(construct.Int16sb),
+        "SingleCoreMaximumTemperature" / ToCelsius(construct.Int16sb),
+        "ModuleWithHighestTemperatureOfSingleCore" / construct.Short,
+        "SingleCoreMinimumTemperature" / ToCelsius(construct.Int16sb),
+        "ModuleWithLowestTemperatureOfSingleCore" / construct.Short,
+        "MOSFETAverageTemperature" / ToCelsius(construct.Int16sb),
+        "MOSFETMaximumTemperature" / ToCelsius(construct.Int16sb),
+        "MOSFETHighestTemperatureModule" / construct.Short,
+        "MOSFETMinimumTemperature" / ToCelsius(construct.Int16sb),
+        "MOSFETLowestTemperatureModule" / construct.Short,
+        "BMSAverageTemperature" / ToCelsius(construct.Int16sb),
+        "BMSMaximumTemperature" / ToCelsius(construct.Int16sb),
+        "BMSHighestTemperatureModule" / construct.Short,
+        "BMSMinimumTemperature" / ToCelsius(construct.Int16sb),
+        "BMSLowestTemperatureModule" / construct.Short
+    )
+
+    system_charge_discharge_management_info = construct.Struct(
+        "ChargeVoltageLimit" / ToVolt(construct.Int16ub),
+        "DischargeVoltageLimit" / ToVolt(construct.Int16ub),
+        "ChargeCurrent" / DivideBy100(construct.Int16sb),
+        "DischargeCurrent" / DivideBy100(construct.Int16sb),
+        "ChargeDischargeStatus" / construct.BitStruct(
+            "ChargeEnable" / construct.Flag,
+            "DischargeEnable" / construct.Flag,
+            "ChargeImmediately" / construct.Flag,
+            "FullChargeRequest" / construct.Flag,
+            "_reserved" / construct.Nibble
+        )
+    )
+
     def __init__(self, serial_port='\\\\.\\COM4', baudrate=9600):
         self.s = serial.Serial(serial_port, baudrate, bytesize=8, parity=serial.PARITY_NONE, stopbits=1, timeout=2, exclusive=True)
 
@@ -254,14 +296,12 @@ class Pylontech:
 
         return format.parse(frame)
 
-
     def read_frame(self):
         raw_frame = self.s.readline()
         print(f'Response: {raw_frame}')
         f = self._decode_hw_frame(raw_frame=raw_frame)
         parsed = self._decode_frame(f)
         return parsed
-
 
     def scan_for_batteries(self, start=0, end=255) -> Dict[int, str]:
         """ Returns a map of the batteries id to their serial number """
@@ -346,11 +386,30 @@ class Pylontech:
             dev_id = 2
         
         bdevid = "{:02X}".format(dev_id).encode()
-        #self.send_cmd(dev_id, 0x44, b"FF")
+        self.send_cmd(dev_id, 0x44, bdevid)
         f = self.read_frame()
         #dataflag = f.info[0]
         d = self.alarm_info.parse(f.info[1:])
         return d
+
+    def get_system_analog_data(self, dev_id = None):
+        if dev_id is None:
+            dev_id = 2
+        
+        self.send_cmd(dev_id, 0x61)
+        f = self.read_frame()
+        #dataflag = f.info[0]
+        d = self.system_analog_data.parse(f.info[0:])
+        return d
+
+    def get_system_charge_discharge_management_info(self, dev_id = None):
+        if dev_id is None:
+            dev_id = 2
+        self.send_cmd(dev_id, 0x63)
+        f = self.read_frame()
+        #dataflag = f.info[0]
+        d = self.system_charge_discharge_management_info.parse(f.info[0:])
+        return d 
 
 if __name__ == '__main__':
     p = Pylontech()
@@ -369,8 +428,8 @@ if __name__ == '__main__':
     #print("get_module_serial_number")
     #print(p.get_module_serial_number())
 
-    print("get_values")
-    print(p.get_values())
+    #print("get_values")
+    #print(p.get_values())
 
     #print("get_values_single")
     #print(p.get_values_single(2))
@@ -378,4 +437,10 @@ if __name__ == '__main__':
     #p.scan_for_batteries(0, 4)
 
     #print("get_alarm_info")
-    #print(p.get_alarm_info(2))
+    #print(p.get_alarm_info())
+
+    print("Get system analog data")
+    print(p.get_system_analog_data())
+
+    #print("Get system charge discharge management info")
+    #print(p.get_system_charge_discharge_management_info())
