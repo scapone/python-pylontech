@@ -395,6 +395,38 @@ def test_up2500_management_info():
     assert not d.status.FullChargeRequest
     assert not d.status.ShouldCharge
 
+def test_alarm_info():
+    p = Pylontech([b'~20024600C04000020F000000000000000000000000000000050000000000000000000E000000F169\r'])
+
+    d = p.get_alarm_info()
+
+    assert d.NumberOfModule == 2
+    assert d.NumberOfCells == 15
+    assert all(x == 'Normal' for x in d.CellVoltages)
+    assert d.NumberOfTemperatures == 5
+    assert all(x == 'Normal' for x in d.Temperatures)
+    assert d.ChargeCurrent == 'Normal'
+    assert d.PackVoltage == 'Normal'
+    assert d.DischargeCurrent == 'Normal'
+    assert not d.Status1.PackUnderVoltage
+    assert not d.Status1.ChargeTemperatureProtection
+    assert not d.Status1.DischargeTemperatureProtection
+    assert not d.Status1.DischargeOvercurrent
+    assert not d.Status1.ChargeOvercurrent
+    assert not d.Status1.CellLowerLimitVoltage
+    assert not d.Status1.OverVoltage
+    assert d.Status2.UseThePackPower
+    assert d.Status2.DFET
+    assert d.Status2.CFET
+    assert not d.Status2.PreFET
+    assert not d.Status3.EffectiveChargeCurrent
+    assert not d.Status3.EffectiveDischargeCurrent
+    assert not d.Status3.StartUpHeater
+    assert not d.Status3.FullyCharged
+    assert not d.Status3.Buzzer
+    assert all(not x for x in d.Status4.CheckCells)
+    assert all(not x for x in d.Status5.CheckCells)
+
 def test_system_analog_data():
     p = Pylontech([b'~2012460080622E5361A86209D40B7462610DB800340CBB00140BAA0BB700350B9D00150BAA0BB800360B9C00160BAA0BB600370B9E0017E862\r'])
 
@@ -441,4 +473,4 @@ def test_system_charge_discharge_management_info():
     assert d.Status.ChargeImmediately
     assert d.Status.FullChargeRequest
 
-test_system_analog_data()
+test_alarm_info()

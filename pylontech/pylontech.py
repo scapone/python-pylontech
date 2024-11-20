@@ -145,15 +145,22 @@ class Pylontech:
         "StateOfCharge" / construct.Computed(construct.this.RemainingCapacity / construct.this.TotalCapacity),
     )
 
+    NormalEnum = construct.Enum(construct.Byte,
+        Normal = 0,
+        BelowLowerLimit = 1,
+        AboveUpperLimit = 2,
+        OtherError = 0xf0
+    )
+
     alarm_info = construct.Struct(
         "NumberOfModule" / construct.Byte,
         "NumberOfCells" / construct.Byte,
-        "CellVoltages" / construct.Array(construct.this.NumberOfCells, construct.Byte),
+        "CellVoltages" / construct.Array(construct.this.NumberOfCells, NormalEnum),
         "NumberOfTemperatures" / construct.Byte,
-        "Temperatures" / construct.Array(construct.this.NumberOfTemperatures, construct.Byte),
-        "ChargeCurrent" / construct.Byte,
-        "PackVoltage" / construct.Byte,
-        "DischargeCurrent" / construct.Byte,
+        "Temperatures" / construct.Array(construct.this.NumberOfTemperatures, NormalEnum),
+        "ChargeCurrent" / NormalEnum,
+        "PackVoltage" / NormalEnum,
+        "DischargeCurrent" / NormalEnum,
         "Status1" / construct.BitStruct(
             "PackUnderVoltage" / construct.Flag,
             "ChargeTemperatureProtection" / construct.Flag,
@@ -181,10 +188,10 @@ class Pylontech:
             "Buzzer" / construct.Flag
         ),
         "Status4" / construct.BitStruct(
-            "CheckCell_8_1" / construct.Array(8, construct.Flag)
+            "CheckCells" / construct.Array(8, construct.Flag)
         ),
         "Status5" / construct.BitStruct(
-            "CheckCell_16_9" / construct.Array(8, construct.Flag)
+            "CheckCells" / construct.Array(8, construct.Flag)
         )
     )
 
