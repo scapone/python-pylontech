@@ -19,11 +19,14 @@ class JoinBytes(construct.Adapter):
 class DivideBy1000(construct.Adapter):
     def _decode(self, obj, context, path) -> float:
         return obj / 1000
-
+    def _encode(self, obj, context, path):
+        return int(obj * 1000)
 
 class DivideBy100(construct.Adapter):
     def _decode(self, obj, context, path) -> float:
         return obj / 100
+    def _encode(self, obj, context, path):
+        return int(obj * 100)
 
 class DivideBy10(construct.Adapter):
     def _decode(self, obj, context, path) -> float:
@@ -32,6 +35,8 @@ class DivideBy10(construct.Adapter):
 class ToVolt(construct.Adapter):
     def _decode(self, obj, context, path) -> float:
         return obj / 1000
+    def _encode(self, obj, context, path):
+        return int(obj * 1000)
 
 class ToAmp(construct.Adapter):
     def _decode(self, obj, context, path) -> float:
@@ -40,8 +45,8 @@ class ToAmp(construct.Adapter):
 class ToCelsius(construct.Adapter):
     def _decode(self, obj, context, path) -> float:
         return (obj - 2731) / 10.0  # in Kelvin*10
-
-
+    def _encode(self, obj, context, path):
+        return int(obj * 10 + 2731)
 
 class Pylontech:
     manufacturer_info_fmt = construct.Struct(
@@ -154,13 +159,13 @@ class Pylontech:
             "ChargeTemperatureProtection" / construct.Flag,
             "DischargeTemperatureProtection" / construct.Flag,
             "DischargeOvercurrent" / construct.Flag,
-            "_Reserved" / construct.Flag,
+            construct.Padding(1),
             "ChargeOvercurrent" / construct.Flag,
             "CellLowerLimitVoltage" / construct.Flag,
             "OverVoltage" / construct.Flag
         ),
         "Status2" / construct.BitStruct(
-            "_Reserved" / construct.Nibble,
+            construct.Padding(4),
             "UseThePackPower" / construct.Flag,
             "DFET" / construct.Flag,
             "CFET" / construct.Flag,
@@ -170,9 +175,9 @@ class Pylontech:
             "EffectiveChargeCurrent" / construct.Flag,
             "EffectiveDischargeCurrent" / construct.Flag,
             "StartUpHeater" / construct.Flag,
-            "_Reserved1" / construct.Flag,
+            construct.Padding(1),
             "FullyCharged" / construct.Flag,
-            "_Reserved2" / construct.Padding(2),
+            construct.Padding(2),
             "Buzzer" / construct.Flag
         ),
         "Status4" / construct.BitStruct(
@@ -215,14 +220,14 @@ class Pylontech:
     system_charge_discharge_management_info = construct.Struct(
         "ChargeVoltageLimit" / ToVolt(construct.Int16ub),
         "DischargeVoltageLimit" / ToVolt(construct.Int16ub),
-        "ChargeCurrent" / DivideBy100(construct.Int16sb),
-        "DischargeCurrent" / DivideBy100(construct.Int16sb),
-        "ChargeDischargeStatus" / construct.BitStruct(
+        "ChargeCurrentLimit" / DivideBy100(construct.Int16sb),
+        "DischargeCurrentLimit" / DivideBy100(construct.Int16sb),
+        "Status" / construct.BitStruct(
             "ChargeEnable" / construct.Flag,
             "DischargeEnable" / construct.Flag,
             "ChargeImmediately" / construct.Flag,
             "FullChargeRequest" / construct.Flag,
-            "_reserved" / construct.Nibble
+            construct.Padding(4)
         )
     )
 
@@ -439,8 +444,8 @@ if __name__ == '__main__':
     #print("get_alarm_info")
     #print(p.get_alarm_info())
 
-    print("Get system analog data")
-    print(p.get_system_analog_data())
+    #print("Get system analog data")
+    #print(p.get_system_analog_data())
 
     #print("Get system charge discharge management info")
     #print(p.get_system_charge_discharge_management_info())

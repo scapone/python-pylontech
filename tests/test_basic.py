@@ -379,7 +379,6 @@ def test_up2500_1module_status_info_parsing_1():
     assert d.TotalPower == d.Power
     assert d.StateOfCharge == approx(0.86)
 
-
 def test_up2500_management_info():
     p = Pylontech([b"~20024600B014026EF05AA0022BFDD5C0F915\r"])
 
@@ -395,3 +394,51 @@ def test_up2500_management_info():
     assert not d.status.ChargeImmediately1
     assert not d.status.FullChargeRequest
     assert not d.status.ShouldCharge
+
+def test_system_analog_data():
+    p = Pylontech([b'~2012460080622E5361A86209D40B7462610DB800340CBB00140BAA0BB700350B9D00150BAA0BB800360B9C00160BAA0BB600370B9E0017E862\r'])
+
+    d = p.get_system_analog_data(18)
+
+    assert d.TotalAverageVoltage == 11.859
+    assert d.TotalCurrent == 25.0
+    assert d.SystemSOC == 98
+    assert d.AverageNumberOfCycles == 2516
+    assert d.MaximumNumberOfCycles == 2932
+    assert d.AverageSOH == 98
+    assert d.MinimumSOH == 97
+    assert d.SingleCoreMaximumVoltage == 3.512
+    assert d.ModuleWithHighestVoltageOfSingleCore == 52
+    assert d.SingleCoreMinimumVoltage == 3.259
+    assert d.ModuleWithLowestVoltageOfSingleCore == 20
+    assert d.SingleCoreAverageTemperature == 25.5
+    assert d.SingleCoreMaximumTemperature == 26.8
+    assert d.ModuleWithHighestTemperatureOfSingleCore == 53
+    assert d.SingleCoreMinimumTemperature == 24.2
+    assert d.ModuleWithLowestTemperatureOfSingleCore == 21
+    assert d.MOSFETAverageTemperature == 25.5
+    assert d.MOSFETMaximumTemperature == 26.9
+    assert d.MOSFETHighestTemperatureModule == 54
+    assert d.MOSFETMinimumTemperature == 24.1
+    assert d.MOSFETLowestTemperatureModule == 22
+    assert d.BMSAverageTemperature == 25.5
+    assert d.BMSMaximumTemperature == 26.7
+    assert d.BMSHighestTemperatureModule == 55
+    assert d.BMSMinimumTemperature == 24.3
+    assert d.BMSLowestTemperatureModule == 23    
+
+def test_system_charge_discharge_management_info():
+    p = Pylontech([b'~20124600D012DCD45DC009C407E4B0F97D\r'])
+
+    d = p.get_system_charge_discharge_management_info(18)
+
+    assert d.ChargeVoltageLimit == 56.531
+    assert d.DischargeVoltageLimit == 24.0
+    assert d.ChargeCurrentLimit == 25.0
+    assert d.DischargeCurrentLimit == 20.2
+    assert d.Status.ChargeEnable
+    assert not d.Status.DischargeEnable
+    assert d.Status.ChargeImmediately
+    assert d.Status.FullChargeRequest
+
+test_system_analog_data()
