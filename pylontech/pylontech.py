@@ -448,11 +448,11 @@ if __name__ == '__main__':
 
     #p.scan_for_batteries(0, 4)
 
-    #print("get_alarm_info")
+    #print("get_alarm_info (44h)")
     #print(p.get_alarm_info())
 
-    #print("Get system analog data")
+    #print("Get system analog data (61h)")
     #print(p.get_system_analog_data())
 
-    #print("Get system charge discharge management info")
+    #print("Get system charge discharge management info (63h)")
     #print(p.get_system_charge_discharge_management_info())

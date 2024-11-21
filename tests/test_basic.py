@@ -8,7 +8,6 @@ import pylontech
 from pylontech.pylontech import ToVolt, ToAmp, ToCelsius, DivideBy1000
 import construct
 
-
 class MockSerial(object):
     def __init__(self, responses: List[bytes]):
         self.responses = responses
@@ -21,7 +20,6 @@ class MockSerial(object):
 
     def write(self, data: bytes):
         print(f"write: {data}")
-
 
 class Pylontech(pylontech.Pylontech):
     def __init__(self, responses):
@@ -460,7 +458,7 @@ def test_system_analog_data():
     assert d.BMSLowestTemperatureModule == 23    
 
 def test_system_charge_discharge_management_info():
-    p = Pylontech([b'~20124600D012DCD45DC009C407E4B0F97D\r'])
+    p = Pylontech([b'~20124600D012DCD35DC009C407E4B0F97E\r'])
 
     d = p.get_system_charge_discharge_management_info(18)
 
@@ -474,3 +472,5 @@ def test_system_charge_discharge_management_info():
     assert d.Status.FullChargeRequest
 
 test_alarm_info()
+test_system_analog_data()
+test_system_charge_discharge_management_info()
