@@ -464,8 +464,8 @@ def test_system_charge_discharge_management_info():
 
     assert d.ChargeVoltageLimit == 56.531
     assert d.DischargeVoltageLimit == 24.0
-    assert d.ChargeCurrentLimit == 25.0
-    assert d.DischargeCurrentLimit == 20.2
+    assert d.ChargeCurrentLimit == 250
+    assert d.DischargeCurrentLimit == 202
     assert d.Status.ChargeEnable
     assert not d.Status.DischargeEnable
     assert d.Status.ChargeImmediately

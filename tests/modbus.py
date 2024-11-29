@@ -3,8 +3,11 @@ import serial
 
 ser = serial.Serial(port='COM4', baudrate=9600, timeout=1, exclusive=True)
 
-#package = bytearray(b'\x01\x03\x00\x13\x00\x01')
-package = bytearray(b'\x01\x03\x00\x10\x00\x10')
+package = bytearray(b'\x01\x03\x00\x13\x00\x01')
+#package = bytearray(b'\x01\x03\x00\x10\x00\x10')
+#package = bytearray(b'\x01\x03\x02\x04\x00\x1f')
+#package = bytearray(b'\x01\x03\x00\x0C\x00\x08')
+#package = bytearray(b'\x01\x03\x00\x14\x00\x04')
 
 for i in range(1, 2):
     #package[0] = i

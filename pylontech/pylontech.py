@@ -41,6 +41,8 @@ class ToVolt(construct.Adapter):
 class ToAmp(construct.Adapter):
     def _decode(self, obj, context, path) -> float:
         return obj / 10
+    def _encode(self, obj, context, path):
+        return int(obj * 10)
 
 class ToCelsius(construct.Adapter):
     def _decode(self, obj, context, path) -> float:
@@ -227,8 +229,8 @@ class Pylontech:
     system_charge_discharge_management_info = construct.Struct(
         "ChargeVoltageLimit" / ToVolt(construct.Int16ub),
         "DischargeVoltageLimit" / ToVolt(construct.Int16ub),
-        "ChargeCurrentLimit" / DivideBy100(construct.Int16sb),
-        "DischargeCurrentLimit" / DivideBy100(construct.Int16sb),
+        "ChargeCurrentLimit" / ToAmp(construct.Int16sb),
+        "DischargeCurrentLimit" / ToAmp(construct.Int16sb),
         "Status" / construct.BitStruct(
             "ChargeEnable" / construct.Flag,
             "DischargeEnable" / construct.Flag,
