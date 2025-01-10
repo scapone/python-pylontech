@@ -199,7 +199,7 @@ class Pylontech:
 
     system_analog_data = construct.Struct(
         "TotalAverageVoltage" / ToVolt(construct.Int16ub),
-        "TotalCurrent" / DivideBy1000(construct.Int16sb),
+        "TotalCurrent" / DivideBy100(construct.Int16sb),
         "SystemSOC" / construct.Byte,
         "AverageNumberOfCycles" / construct.Int16ub,
         "MaximumNumberOfCycles" / construct.Int16ub,
@@ -312,6 +312,7 @@ class Pylontech:
 
     def read_frame(self):
         raw_frame = self.s.readline()
+        #raw_frame = b"~20024600C06E00020F0D020D020D020D010D030D020D020D010D020D020D020D000D010D020D01050BA70BA70BA40BA40BA40000C314C35002C350000DE652\r"
         print(f'Response: {raw_frame}')
         f = self._decode_hw_frame(raw_frame=raw_frame)
         parsed = self._decode_frame(f)

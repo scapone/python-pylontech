@@ -431,7 +431,7 @@ def test_system_analog_data():
     d = p.get_system_analog_data(18)
 
     assert d.TotalAverageVoltage == 11.859
-    assert d.TotalCurrent == 25.0
+    assert d.TotalCurrent == 250
     assert d.SystemSOC == 98
     assert d.AverageNumberOfCycles == 2516
     assert d.MaximumNumberOfCycles == 2932

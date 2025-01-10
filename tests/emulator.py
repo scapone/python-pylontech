@@ -40,8 +40,8 @@ def send_system_analog_data(adr: int, cid2: int = 0):
 
 def send_system_charge_discharge_management_info(adr: int, cid2: int = 0):
     data = p.system_charge_discharge_management_info.build(dict(
-        ChargeVoltageLimit = 54,
-        DischargeVoltageLimit = 47.0,
+        ChargeVoltageLimit = 53,
+        DischargeVoltageLimit = 45.0,
         ChargeCurrentLimit = 25,
         DischargeCurrentLimit = 25,
         Status = dict(
